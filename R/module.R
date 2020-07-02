@@ -30,18 +30,21 @@ RenvModule <- setRefClass("RenvModule",
       }
       
       # Make sure to process default modules after the environment is set with the above loop
-      for (x in seq(1,length(default_modules[[1]]))){
-        module_name <- default_modules[[1]][x]
-        print(paste("Loading module",module_name))
-        try(load_unload("load",module_name))
+      for (x in seq_along(default_modules[[1]])){
+        print(paste("Loading module", default_modules[[1]][x]))
+        try(load_unload("load", default_modules[[1]][x]))
       }
     },
 
     # Return available modules or currently loaded modules
     avail_list=function(action_type){
-      try(module_vars <- system2(modulecmd_path,paste('bash',action_type,'-t'),stdout=TRUE,stderr=TRUE))
+      try(module_vars <- system2("module", action_type, stdout=TRUE, stderr=TRUE))
+      if(length(module_vars) == 0){
+        try(module_vars <- system2("module", paste(action_type,'-t'), stdout=TRUE, stderr=TRUE))
+      } 
       # Return only the module names
-      return(module_vars[-grep(":$",module_vars)])
+      # return(module_vars[-grep(":$",module_vars)])
+      return(module_vars)
     },
 
     # Unload all currently loaded modules
@@ -116,7 +119,8 @@ module <- function(action_type,module_name=""){
 
   # Find path for module command
   myEnvModules$modulecmd_path <- Sys.getenv('LMOD_CMD')
-  if (length(myEnvModules$modulecmd_path) > 0) {
+  if(myEnvModules$modulecmd_path =="") {
+#    if (nchar(sub("\\s+", "", myEnvModules$modulecmd_path)) == 0) {
     try(
       suppressWarnings(myEnvModules$modulecmd_path <- system("which modulecmd",intern=TRUE,ignore.stderr=TRUE)),
       silent=TRUE
