@@ -44,7 +44,18 @@ RenvModule <- setRefClass("RenvModule",
       } 
       # Return only the module names
       # return(module_vars[-grep(":$",module_vars)])
-      return(module_vars)
+      module <- as.character()
+      module_vars <- gsub(".*:|\\(.*?\\)", "", module_vars) ## remove "Currently Loaded Modulefiles:" and "(default)"
+      module_vars <- strsplit(module_vars, " ")
+      for(i in seq_along(module_vars)){
+        for(j in seq_along(module_vars[[i]])){
+          module_vars[[i]][j] <-  gsub("[(].*|.*[)]|^---.*", "", module_vars[[i]][j])
+          if(nchar(module_vars[[i]][j]) > 0){
+            module <- c(module, module_vars[[i]][j])
+          }
+        }
+      }
+      return(module)
     },
 
     # Unload all currently loaded modules
